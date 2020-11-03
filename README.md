@@ -47,6 +47,10 @@ options = {
 
 fcm.send(registration_ids, options)
 ```
+Note: 'my_server_key' is the key located in 
+`Project Settings > Cloud Messaging > Project credentials`
+
+
 
 If you had the browser opened to the project,
 you should see "Foreground message received" in the browser console.
