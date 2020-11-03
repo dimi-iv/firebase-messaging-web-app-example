@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Firebase Notification Example</title>
+  </head>
+
+  <body>
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
+
+    <!-- Load messaging -->
+    <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-messaging.js"></script>
+
+    <script>
+      // Your web app's Firebase configuration
+      // Copy those from your Firebase account
+      // Project Settings > General > Web apps > Firebase SDK snippet
+      //
+      var firebaseConfig = {
+        apiKey: "XXXX"
+        authDomain: "XXXX",
+        databaseURL: "XXXX",
+        projectId: "XXXX",
+        storageBucket: "XXXX",
+        messagingSenderId: "XXXX",
+        appId: "XXXX",
+        measurementId: "XXXX"
+      };
+
+      // Get this form you Firebase account
+      // Project Settings > Cloud Messaging > Web Configuration > Web Push certificates
+      var firebaseVapidKey = "XXXX";
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+
+      // Initialize Messaging
+      const messaging = firebase.messaging();
+
+      checkPermissionsAndEnableFirebase();
+
+      // First request browser notification permissions
+      // For More Info: https://developer.mozilla.org/en-US/docs/Web/API/Notification/requestPermission
+      // DEPRECATION WARNING: messaging.requestPermission() has been deprecated
+      // ( https://firebase.google.com/docs/reference/js/firebase.messaging.Messaging#requestpermission )
+      function checkPermissionsAndEnableFirebase(){
+        // Check if the browser supports notifications
+        if (!("Notification" in window)) {
+          alert("This browser does not support desktop notification");
+        }
+
+        // Check whether notification permissions have already been granted
+        else if (Notification.permission === "granted") {
+          // If permissions have been granted,
+          // enable Firebase notifications.
+          console.log("Permission already granted");
+          enableFirebaseNotifications();
+        }
+
+        // Otherwise, ask user for permission
+        else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then(function (permission) {
+            // If the user accepts, enable Firebase Notifications
+            if (permission === "granted") {
+              console.log("Permission just granted");
+              enableFirebaseNotifications();
+            }
+          });
+        }
+      }
+
+      // Register Service Worker,
+      // get token,
+      // and handle foreground Firebase messages
+      //
+      function enableFirebaseNotifications() {
+        registerNotificationSW();
+        getDeviceToken();
+        handleForegroundMessages();
+      }
+
+      // Register your Service Worker.
+      // The Service Worker will handle background messages.
+      function registerNotificationSW() {
+        let registrationName = 'firebase-messaging-sw.js';
+        if('serviceWorker' in navigator
+            && !navigator.serviceWorker.getRegistration(registrationName)) {
+
+          navigator.serviceWorker.register(registrationName)
+                                    .then(function(registration) {
+                                      console.log("Service Worker Registered");
+                                      messaging.useServiceWorker(registration);
+                                    })
+                                    .catch(function(error) {
+                                      console.log("Service Worker could not be registered: ", error);
+                                    });
+        }
+      }
+
+      // Get Device Token
+      function getDeviceToken() {
+        messaging.getToken({ vapidKey: firebaseVapidKey })
+                     .then(function(token) {
+                       console.log('TOKEN: ', token);
+                       // TODO: This is a good place to
+                       // send this token to your server,
+                       // to catch any app push notifications.
+                     })
+                     .catch(function(error) {
+                       console.log('Could not obtain TOKEN: ', error);
+                     });
+      }
+
+      function handleForegroundMessages() {
+        // Handle foreground message handling
+        // (when the user is looking at the tab)
+        messaging.onMessage((payload) => {
+          console.log('Foreground Message received: ', payload);
+        });
+      }
+
+    </script>
+
+  </body>
+</html>
+
